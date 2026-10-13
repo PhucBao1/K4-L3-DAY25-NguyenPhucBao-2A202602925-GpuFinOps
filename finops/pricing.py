@@ -29,6 +29,23 @@ def request_cost(
     return cost
 
 
+def cache_break_even_reads(write_cost_per_m: float, price_in_per_m: float,
+                           read_discount: float = 0.10) -> float:
+    """Reads per cache write needed to pay back the write premium.
+
+    Each cached read saves price_in * (1 - read_discount); the write costs
+    write_cost_per_m extra. Break-even = write_cost / saving-per-read.
+    """
+    saving_per_read = price_in_per_m * (1.0 - read_discount)
+    return write_cost_per_m / saving_per_read if saving_per_read > 0 else float("inf")
+
+
+def cache_is_worth_it(avg_cache_reads: float, write_cost_per_m: float, price_in_per_m: float,
+                      read_discount: float = 0.10) -> bool:
+    """Caching pays only when reads per write reach the break-even count."""
+    return avg_cache_reads >= cache_break_even_reads(write_cost_per_m, price_in_per_m, read_discount)
+
+
 def dollars_per_million(total_cost_usd: float, total_tokens: int) -> float:
     """Aggregate unit economics: $ per 1,000,000 tokens served."""
     if total_tokens <= 0:
